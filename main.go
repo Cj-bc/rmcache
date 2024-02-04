@@ -3,6 +3,7 @@ package main
 import (
 	"log/slog"
 	"os"
+	"os/exec"
 
 	"github.com/BurntSushi/toml"
 )
@@ -17,7 +18,8 @@ type program struct {
 }
 
 func which(progname string) bool {
-	return false
+	err := exec.Command("which", progname).Run()
+	return err == nil
 }
 
 func main() {

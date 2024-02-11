@@ -42,5 +42,24 @@ func main() {
 			// Run it
 		}
 
+		for _, p := range program.Paths {
+			logger.Info(p)
+			err := removePath(p)
+			if err != nil {
+				logger.Warn("Failed to remove path", "path", p)
+			} else {
+				logger.Info("Proprely removed path", "program", name, "path", p)
+			}
+		}
+
 	}
+}
+
+// Remove given path by `unlink'
+// TODO:
+// - make sure 'p' is absolute path
+// - return error if 'p' is symlink (for security reason)
+func removePath(p string) error {
+	err := unix.Unlink(p)
+	return err
 }

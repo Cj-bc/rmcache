@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"log/slog"
 	"os"
 	"os/exec"
@@ -60,5 +61,11 @@ func main() {
 // - make sure 'p' is absolute path
 // - return error if 'p' is symlink (for security reason)
 func removePath(p string) error {
+	if info, err := os.Stat(p); err != nil {
+		return err
+	} else if !info.Mode().IsRegular() {
+		return errors.New("File is not regular file")
+	}
+
 	return os.Remove(p)
 }

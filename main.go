@@ -60,6 +60,5 @@ func main() {
 // - make sure 'p' is absolute path
 // - return error if 'p' is symlink (for security reason)
 func removePath(p string) error {
-	err := unix.Unlink(p)
-	return err
+	return os.Remove(p)
 }

@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"os"
 	"os/exec"
+	"path/filepath"
 
 	"github.com/BurntSushi/toml"
 )
@@ -46,13 +47,21 @@ func main() {
 			// Run it
 		}
 
-		for _, p := range program.Paths {
-			logger.Info(p)
-			err := removePath(p)
+		for _, glob := range program.Paths {
+			expanded, err := filepath.Glob(glob)
 			if err != nil {
-				logger.Warn("Failed to remove path", "path", p, "error", err)
-			} else {
-				logger.Info("Proprely removed path", "program", name, "path", p)
+				logger.Info("Glob pattern malformed.", "path", glob, "err", err)
+				continue
+			}
+
+			for _, p := range expanded {
+				logger.Info(p)
+				err := removePath(p)
+				if err != nil {
+					logger.Warn("Failed to remove path", "path", p, "error", err)
+				} else {
+					logger.Info("Proprely removed path", "program", name, "path", p)
+				}
 			}
 		}
 

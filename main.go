@@ -51,6 +51,9 @@ func main() {
 			if err != nil {
 				logger.Info("Glob pattern malformed.", "path", glob, "err", err)
 				continue
+			} else if expanded == nil {
+				logger.Info("Glob pattern matches nothing. Skipping path", "path", glob)
+				continue
 			}
 
 			for _, p := range expanded {

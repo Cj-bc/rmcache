@@ -67,7 +67,7 @@ func main() {
 				if err != nil {
 					l.Warn("Failed to remove path", "error", err)
 				} else {
-					l.Info("Proprely removed path")
+					l.Info("Proprely removed path", "size(bytes)", info.Size())
 				}
 			}
 		}

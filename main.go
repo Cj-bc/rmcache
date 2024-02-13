@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"log/slog"
 	"os"
 	"os/exec"
@@ -56,7 +55,15 @@ func main() {
 
 			for _, p := range expanded {
 				l := logger.With("path", p, "program", name)
-				err := removePath(p)
+
+				info, err := os.Stat(p)
+				if err != nil {
+					l.Warn("Cannot stat(2) file", "error", err)
+				} else if !info.Mode().IsRegular() {
+					l.Warn("File is not regular file", "error", err)
+				}
+
+				err = os.Remove(p)
 				if err != nil {
 					l.Warn("Failed to remove path", "error", err)
 				} else {
@@ -66,16 +73,4 @@ func main() {
 		}
 
 	}
-}
-
-// Remove given path if it is regular file. This doesn't allow to
-// specify symbolic link for security reason
-func removePath(path string) error {
-	if info, err := os.Stat(path); err != nil {
-		return err
-	} else if !info.Mode().IsRegular() {
-		return errors.New("File is not regular file")
-	}
-
-	return os.Remove(path)
 }

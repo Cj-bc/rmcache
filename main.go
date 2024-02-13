@@ -80,9 +80,17 @@ func main() {
 	}
 }
 
-// Expands globs
+// Expands tildas, globs
 func Expands(path string) ([]string, error) {
 	_path := path
+	if strings.HasPrefix(path, "~/") {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return []string{}, err
+		}
+
+		_path = filepath.Join(home, path[2:])
+	}
 
 	expanded, err := filepath.Glob(_path)
 	if err != nil {

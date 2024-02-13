@@ -1,6 +1,8 @@
 package main
 
 import (
+	"errors"
+	"fmt"
 	"log/slog"
 	"os"
 	"os/exec"
@@ -49,12 +51,9 @@ func main() {
 		}
 
 		for _, glob := range program.Paths {
-			expanded, err := filepath.Glob(glob)
+			expanded, err := Expands(glob)
 			if err != nil {
-				logger.Info("Glob pattern malformed. Skipping path", "path", glob, "err", err)
-				continue
-			} else if expanded == nil {
-				logger.Info("Glob pattern matches nothing. Skipping path", "path", glob)
+				logger.Info("Error while expanding glob pattern. Skipping path", "path", glob, "error", err)
 				continue
 			}
 
@@ -78,6 +77,19 @@ func main() {
 				}
 			}
 		}
-
 	}
+}
+
+// Expands globs
+func Expands(path string) ([]string, error) {
+	_path := path
+
+	expanded, err := filepath.Glob(_path)
+	if err != nil {
+		return []string{}, fmt.Errorf("malformed pattern: %e", err)
+	} else if expanded == nil {
+		return []string{}, errors.New("Glob pattern matches nothing.")
+	}
+
+	return expanded, nil
 }

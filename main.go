@@ -18,6 +18,8 @@ type program struct {
 	Paths []string
 }
 
+// Return true if PROGNAME is found in PATH.
+// This requires 'which' command to run.
 func which(progname string) bool {
 	err := exec.Command("which", progname).Run()
 	return err == nil
@@ -38,6 +40,7 @@ func main() {
 			logger.Info("Program isn't found. Skipping entry", "program", name)
 			continue
 		}
+		logger.Info("Found entry", "program", name)
 
 		if len(program.Run) != 0 {
 			// Run it
@@ -47,7 +50,7 @@ func main() {
 			logger.Info(p)
 			err := removePath(p)
 			if err != nil {
-				logger.Warn("Failed to remove path", "path", p)
+				logger.Warn("Failed to remove path", "path", p, "error", err)
 			} else {
 				logger.Info("Proprely removed path", "program", name, "path", p)
 			}
@@ -56,10 +59,8 @@ func main() {
 	}
 }
 
-// Remove given path by `unlink'
-// TODO:
-// - make sure 'p' is absolute path
-// - return error if 'p' is symlink (for security reason)
+// Remove given path if it is regular file. This doesn't allow to
+// specify symbolic link for security reason
 func removePath(p string) error {
 	if info, err := os.Stat(p); err != nil {
 		return err

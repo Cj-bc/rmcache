@@ -61,12 +61,12 @@ func main() {
 
 // Remove given path if it is regular file. This doesn't allow to
 // specify symbolic link for security reason
-func removePath(p string) error {
-	if info, err := os.Stat(p); err != nil {
+func removePath(path string) error {
+	if info, err := os.Stat(path); err != nil {
 		return err
 	} else if !info.Mode().IsRegular() {
 		return errors.New("File is not regular file")
 	}
 
-	return os.Remove(p)
+	return os.Remove(path)
 }

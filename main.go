@@ -55,12 +55,12 @@ func main() {
 			}
 
 			for _, p := range expanded {
-				logger.Info(p)
+				l := logger.With("path", p, "program", name)
 				err := removePath(p)
 				if err != nil {
-					logger.Warn("Failed to remove path", "path", p, "error", err)
+					l.Warn("Failed to remove path", "error", err)
 				} else {
-					logger.Info("Proprely removed path", "program", name, "path", p)
+					l.Info("Proprely removed path")
 				}
 			}
 		}

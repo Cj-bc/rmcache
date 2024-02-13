@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"github.com/BurntSushi/toml"
 )
@@ -43,13 +44,14 @@ func main() {
 		logger.Info("Found entry", "program", name)
 
 		if len(program.Run) != 0 {
+			logger.Info("About to run program", "executable", program.Run[0], "args", strings.Join(program.Run[1:], " "))
 			// Run it
 		}
 
 		for _, glob := range program.Paths {
 			expanded, err := filepath.Glob(glob)
 			if err != nil {
-				logger.Info("Glob pattern malformed.", "path", glob, "err", err)
+				logger.Info("Glob pattern malformed. Skipping path", "path", glob, "err", err)
 				continue
 			} else if expanded == nil {
 				logger.Info("Glob pattern matches nothing. Skipping path", "path", glob)
@@ -58,6 +60,8 @@ func main() {
 
 			for _, p := range expanded {
 				l := logger.With("path", p, "program", name)
+
+				l.Info("Trying to remove file")
 
 				info, err := os.Stat(p)
 				if err != nil {

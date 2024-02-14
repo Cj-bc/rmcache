@@ -93,11 +93,12 @@ func main() {
 							l.Warn("File is not regular file", "error", err)
 						}
 
-						if !dryRun {
-							err = os.Remove(p)
-						} else {
-							err = nil
+						if dryRun {
+							l.Info("[Dry Run] Planned to remove path", "size(bytes)", info.Size())
+							continue
 						}
+
+						err = os.Remove(p)
 						if err != nil {
 							l.Warn("Failed to remove path", "error", err)
 						} else {

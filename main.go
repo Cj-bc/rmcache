@@ -35,7 +35,10 @@ func main() {
 	if err != nil {
 		logger.Warn("Could not locate user config dir.")
 	}
-	var config string
+	var (
+		config string
+		dryRun bool
+	)
 
 	app := &cli.App{
 		Name: "rmcache",
@@ -44,6 +47,11 @@ func main() {
 				Name:        "config",
 				Value:       filepath.Join(userConfigDir, "rmcache", "config.toml"),
 				Destination: &config,
+			},
+			&cli.BoolFlag{
+				Name:        "dryrun",
+				Aliases:     []string{"d"},
+				Destination: &dryRun,
 			},
 		},
 		Action: func(cCtx *cli.Context) error {
@@ -85,7 +93,11 @@ func main() {
 							l.Warn("File is not regular file", "error", err)
 						}
 
-						err = os.Remove(p)
+						if !dryRun {
+							err = os.Remove(p)
+						} else {
+							err = nil
+						}
 						if err != nil {
 							l.Warn("Failed to remove path", "error", err)
 						} else {

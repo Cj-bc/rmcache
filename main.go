@@ -31,54 +31,76 @@ func which(progname string) bool {
 
 func main() {
 	logger := slog.Default()
-
-	var cfg *Config
-	_, err := toml.DecodeFile("example.toml", &cfg)
+	userConfigDir, err := os.UserConfigDir()
 	if err != nil {
-		logger.Error("Failed to decode file", "error", err)
-		os.Exit(-1)
+		logger.Warn("Could not locate user config dir.")
 	}
+	var config string
 
-	for name, program := range cfg.Programs {
-		if !which(name) {
-			logger.Info("Program isn't found. Skipping entry", "program", name)
-			continue
-		}
-		logger.Info("Found entry", "program", name)
-
-		if len(program.Run) != 0 {
-			logger.Info("About to run program", "executable", program.Run[0], "args", strings.Join(program.Run[1:], " "))
-			// Run it
-		}
-
-		for _, glob := range program.Paths {
-			expanded, err := Expands(glob)
+	app := &cli.App{
+		Name: "rmcache",
+		Flags: []cli.Flag{
+			&cli.PathFlag{
+				Name:        "config",
+				Value:       filepath.Join(userConfigDir, "rmcache", "config.toml"),
+				Destination: &config,
+			},
+		},
+		Action: func(cCtx *cli.Context) error {
+			var cfg *Config
+			_, err = toml.DecodeFile(config, &cfg)
 			if err != nil {
-				logger.Info("Error while expanding glob pattern. Skipping path", "path", glob, "error", err)
-				continue
+				logger.Error("Failed to decode file", "error", err)
+				return err
 			}
 
-			for _, p := range expanded {
-				l := logger.With("path", p, "program", name)
+			for name, program := range cfg.Programs {
+				if !which(name) {
+					logger.Info("Program isn't found. Skipping entry", "program", name)
+					continue
+				}
+				logger.Info("Found entry", "program", name)
 
-				l.Info("Trying to remove file")
-
-				info, err := os.Stat(p)
-				if err != nil {
-					l.Warn("Cannot stat(2) file", "error", err)
-				} else if !info.Mode().IsRegular() {
-					l.Warn("File is not regular file", "error", err)
+				if len(program.Run) != 0 {
+					logger.Info("About to run program", "executable", program.Run[0], "args", strings.Join(program.Run[1:], " "))
+					// Run it
 				}
 
-				err = os.Remove(p)
-				if err != nil {
-					l.Warn("Failed to remove path", "error", err)
-				} else {
-					l.Info("Proprely removed path", "size(bytes)", info.Size())
+				for _, glob := range program.Paths {
+					expanded, err := Expands(glob)
+					if err != nil {
+						logger.Info("Error while expanding glob pattern. Skipping path", "path", glob, "error", err)
+						continue
+					}
+
+					for _, p := range expanded {
+						l := logger.With("path", p, "program", name)
+
+						l.Info("Trying to remove file")
+
+						info, err := os.Stat(p)
+						if err != nil {
+							l.Warn("Cannot stat(2) file", "error", err)
+						} else if !info.Mode().IsRegular() {
+							l.Warn("File is not regular file", "error", err)
+						}
+
+						err = os.Remove(p)
+						if err != nil {
+							l.Warn("Failed to remove path", "error", err)
+						} else {
+							l.Info("Proprely removed path", "size(bytes)", info.Size())
+						}
+					}
 				}
 			}
-		}
+
+			return nil
+		},
 	}
+
+	app.Run(os.Args)
+
 }
 
 // Expands tildas, globs

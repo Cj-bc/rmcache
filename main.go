@@ -62,6 +62,8 @@ func main() {
 				return err
 			}
 
+			removedSize := 0
+
 			for name, program := range cfg.Programs {
 				if !which(name) {
 					logger.Info("Program isn't found. Skipping entry", "program", name)
@@ -97,6 +99,7 @@ func main() {
 
 						if dryRun {
 							l.Info("[Dry Run] Planned to remove path", "size(bytes)", info.Size())
+							removedSize += int(info.Size())
 							continue
 						}
 
@@ -105,11 +108,13 @@ func main() {
 							l.Warn("Failed to remove path", "error", err)
 						} else {
 							l.Info("Proprely removed path", "size(bytes)", info.Size())
+							removedSize += int(info.Size())
 						}
 					}
 				}
 			}
 
+			logger.Info(fmt.Sprintf("Total files removed: %s", ppBytes(removedSize)))
 			return nil
 		},
 	}
@@ -138,4 +143,16 @@ func Expands(path string) ([]string, error) {
 	}
 
 	return expanded, nil
+}
+
+// Convert given bytes to pretty printed string
+func ppBytes(bytes int) string {
+	switch {
+	case 1024 < bytes:
+		return fmt.Sprintf("%d bytes", bytes)
+	case 1024*1024 < bytes:
+		return fmt.Sprintf("%.3f MiB", float64(bytes)/1024)
+	default:
+		return fmt.Sprintf("%.3f GiB", float64(bytes)/(1024*1024))
+	}
 }

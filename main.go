@@ -89,8 +89,10 @@ func main() {
 						info, err := os.Stat(p)
 						if err != nil {
 							l.Warn("Cannot stat(2) file", "error", err)
+							continue
 						} else if !info.Mode().IsRegular() {
 							l.Warn("File is not regular file", "error", err)
+							continue
 						}
 
 						if dryRun {
